@@ -22,6 +22,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.auth.oauth.*;
 import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.auth.oauth2.*;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.oauth2.Oauth2;
 //import com.google.api.client.extensions.servlet.auth.oauth2.*;
 ////import com.google.api.client.extensions.appengine.auth.oauth2.*;
@@ -64,7 +65,8 @@ public class TestAPI{
 		}
 		
 		writeContents(downloadFromDrive());
-	}
+
+		}
 	
 	
 	private void writeContents(String Contents) throws IOException{
@@ -134,8 +136,16 @@ public class TestAPI{
 	    JsonFactory jsonFactory = new JacksonFactory();
 		String LineRead;
 		BufferedReader reader = null;
+		try{
 		reader = new BufferedReader(new FileReader("TestFileTokens.txt"));
 		LineRead = reader.readLine();
+		}
+		catch(IOException e){
+			return null;
+		}
+		finally{
+		reader.close();
+		}
 		reader.close();
 		comma = LineRead.indexOf(',');
 		localAccess = LineRead.substring(0, comma);
@@ -155,7 +165,7 @@ public class TestAPI{
 	        .build();
 	  }
 	
-public  String downloadFromDrive() throws IOException{
+public  String downloadFromDrive() throws IOException,GoogleJsonResponseException{
 	
 		
 		Drive service = buildService(getStoredCredentials());
@@ -163,9 +173,17 @@ public  String downloadFromDrive() throws IOException{
        	
 		
 		String fileContents = null;
+		
+		try{
+		
 		File Drivefile = service.files().get("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg").execute();
 		//Drivefile.setId("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg");
-		
+		}catch (GoogleJsonResponseException e){
+			
+		}
+		finally{
+			
+		}
 		String downloadUrl = Drivefile.getExportLinks().get("text/csv");
 		System.out.println(downloadUrl);
 		fileContents = convertStreamToString(downloadFile(service,Drivefile));
