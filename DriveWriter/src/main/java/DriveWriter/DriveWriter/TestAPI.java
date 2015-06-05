@@ -3,17 +3,11 @@ package DriveWriter.DriveWriter;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.services.drive.Drive;
-
-
-import com.google.api.services.drive.DriveScopes;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-
-
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl;
@@ -24,16 +18,14 @@ import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.oauth2.Oauth2;
-//import com.google.api.client.extensions.servlet.auth.oauth2.*;
-////import com.google.api.client.extensions.appengine.auth.oauth2.*;
 import com.google.api.services.oauth2.model.*;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 
 import java.util.*;
 import java.awt.Desktop;
 import java.io.*;
-
-import com.google.api.services.drive.model.File;
-
 import java.lang.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -104,11 +96,6 @@ public class TestAPI{
 	 accessToken = credential.getAccessToken();
 	 refreshToken = credential.getRefreshToken();
 	 StoreCredentials();
-
-	GoogleCredential credential1 = new GoogleCredential.Builder().setJsonFactory(jsonFactory)
-	.setTransport(httpTransport).setClientSecrets(CLIENT_ID, CLIENT_SECRET).build();
-	credential1.setAccessToken(accessToken);
-	credential1.setRefreshToken(refreshToken);
 	}
 	
 	
