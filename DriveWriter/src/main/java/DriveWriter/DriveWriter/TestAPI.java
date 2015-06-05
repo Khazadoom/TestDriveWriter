@@ -115,7 +115,7 @@ public class TestAPI{
 	private void StoreCredentials() throws IOException{
 		BufferedWriter writer = null;
 		String timeLog = "TestFileTokens.txt";
-        String homefolder = System.getProperty("user.home");
+        String homefolder = System.getProperty("user.dir");
         java.io.File logFile = new java.io.File(homefolder,timeLog);
         writer = new BufferedWriter(new FileWriter(logFile,true));
         writer.write(accessToken + "," + refreshToken);
@@ -155,7 +155,7 @@ public class TestAPI{
 	        .build();
 	  }
 	
-public static String downloadFromDrive() throws IOException{
+public  String downloadFromDrive() throws IOException{
 	
 		
 		Drive service = buildService(getStoredCredentials());
@@ -163,10 +163,9 @@ public static String downloadFromDrive() throws IOException{
        	
 		
 		String fileContents = null;
+		File Drivefile = service.files().get("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg").execute();
+		//Drivefile.setId("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg");
 		
-		File Drivefile = new File();
-		
-		Drivefile.setId("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg");
 		String downloadUrl = Drivefile.getExportLinks().get("text/csv");
 		System.out.println(downloadUrl);
 		fileContents = convertStreamToString(downloadFile(service,Drivefile));
