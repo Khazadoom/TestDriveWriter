@@ -3,6 +3,7 @@ package DriveWriter.DriveWriter;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -17,6 +18,8 @@ import com.google.api.client.auth.oauth.*;
 import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.auth.openidconnect.*;
+import com.google.api.client.googleapis.services.*;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.*;
 import com.google.api.services.drive.model.File;
@@ -26,7 +29,6 @@ import com.google.api.services.drive.DriveScopes;
 import java.util.*;
 import java.awt.Desktop;
 import java.io.*;
-import java.lang.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -37,8 +39,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.google.api.client.auth.openidconnect.*;
-import com.google.api.client.googleapis.services.*;
 
 public class TestAPI{
 	
@@ -49,17 +49,15 @@ public class TestAPI{
 	String refreshToken;
 	
 	public void main() throws IOException, URISyntaxException{
-	
-		GoogleCredential credentials = getStoredCredentials();
-		
-		if (credentials==null){
+			
+		boolean fileExists = CheckAuthFileLoc();
+		if(!fileExists)
+		{
 			getAuthCode();
 		}
 		
 		writeContents(downloadFromDrive());
-
-		}
-	
+	}
 	
 	private void writeContents(String Contents) throws IOException{
 		BufferedWriter writer = null;
@@ -69,7 +67,11 @@ public class TestAPI{
         writer = new BufferedWriter(new FileWriter(logFile,true));
         writer.write(Contents);
         writer.close();
-		
+	}
+	
+	public boolean CheckAuthFileLoc(){
+		String folder = System.getProperty("user.dir");		
+		return new java.io.File("TestFileTokens.txt").isFile();
 	}
 	
 	private void getAuthCode() throws IOException, URISyntaxException{
@@ -115,7 +117,6 @@ public class TestAPI{
 	private static GoogleCredential getStoredCredentials() throws IOException{
 		
 		System.out.println(System.getProperty("user.dir"));
-		
 		String localAccess;
 		String localRefresh;
 		int comma;
@@ -123,24 +124,18 @@ public class TestAPI{
 	    JsonFactory jsonFactory = new JacksonFactory();
 		String LineRead;
 		BufferedReader reader = null;
-		try{
 		reader = new BufferedReader(new FileReader("TestFileTokens.txt"));
 		LineRead = reader.readLine();
-		}
-		catch(IOException e){
-			return null;
-		}
-		finally{
-		reader.close();
-		}
 		reader.close();
 		comma = LineRead.indexOf(',');
 		localAccess = LineRead.substring(0, comma);
 		localRefresh = LineRead.substring(comma);
-		GoogleCredential storedCredentials = new GoogleCredential.Builder().setJsonFactory(jsonFactory)
-				.setTransport(httpTransport).setClientSecrets(CLIENT_ID,CLIENT_SECRET).build();
-		storedCredentials.setAccessToken(localAccess);
-		storedCredentials.setRefreshToken(localRefresh);
+		GoogleCredential storedCredentials = new GoogleCredential.Builder()
+			.setJsonFactory(jsonFactory)
+			.setTransport(httpTransport).setClientSecrets(CLIENT_ID,CLIENT_SECRET)
+			.build();
+		storedCredentials.setAccessToken("ya29.iQHrK6Hyi3_QzKsacH4FscWj2wsQRX8jWKsgVWWWZOxo1vPBd20ciYeFQYjTX_SxiN8I0Dr0-YwBWQ");
+		storedCredentials.setRefreshToken("1/oDsTWSTqpugXlJFo9IOaHqnemal5T_5yy9_ua_HdDBJIgOrJDtdun6zK6XiATCKT");
 		return storedCredentials;
 	}
 	
@@ -151,6 +146,11 @@ public class TestAPI{
 	    return new Drive.Builder(httpTransport, jsonFactory, credentials)
 	        .build();
 	  }
+	public void useRefreshToken(){
+	
+		
+		
+	}
 	
 public  String downloadFromDrive() throws IOException,GoogleJsonResponseException{
 	
@@ -160,28 +160,35 @@ public  String downloadFromDrive() throws IOException,GoogleJsonResponseExceptio
        	
 		
 		String fileContents = null;
-		
+		File Drivefile = null;
 		try{
 		
-		File Drivefile = service.files().get("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg").execute();
-		//Drivefile.setId("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg");
-		}catch (GoogleJsonResponseException e){
-			
+		Drivefile = service.files().get("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg").execute();
+		Drivefile.setId("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg");
+		}catch (HttpResponseException e) {
+		      if (e.getStatusCode() == 401) {
+		          throw new UnsupportedOperationException();
+		        }	
 		}
 		finally{
 			
 		}
-		String downloadUrl = Drivefile.getExportLinks().get("text/csv");
+		String downloadUrl = Drivefile.getExportLinks().get("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 		System.out.println(downloadUrl);
+		Drivefile.setDownloadUrl(downloadUrl);
 		fileContents = convertStreamToString(downloadFile(service,Drivefile));
 		return fileContents;
 		
 	}
 	
 	static String convertStreamToString(java.io.InputStream is) {
-	    java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+		
+		String s = new Scanner(is,"UTF-8").useDelimiter("\\A").next();
+        System.out.println(s);
+		
+	    //java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
 
-	    return s.hasNext() ? s.next() : "";
+	    return s;
 	}
 	
 	private static void printFile(Drive service, String fileId) {
@@ -208,10 +215,7 @@ public  String downloadFromDrive() throws IOException,GoogleJsonResponseExceptio
 	  private static InputStream downloadFile(Drive service, File file) {
 	    if (file.getDownloadUrl() != null && file.getDownloadUrl().length() > 0) {
 	      try {
-	        HttpResponse resp =
-	            service.getRequestFactory().buildGetRequest(new GenericUrl("1T_rXb_2CcB4YCA9NS9PyOuboSNcw8dTdnklUYB3O2Fg"))
-	                .execute();
-	        return resp.getContent();
+	    	  return service.files().get(file.getId()).executeMediaAsInputStream();
 	      } catch (IOException e) {
 	        // An error occurred.
 	        e.printStackTrace();
